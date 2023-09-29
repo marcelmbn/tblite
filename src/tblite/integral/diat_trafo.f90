@@ -27,93 +27,311 @@ module tblite_integral_diat_trafo
 
 contains
 
-   pure subroutine diat_trafo(block_overlap, vec_diat_trafo, ksig, kpi, kdel, maxl)
+   ! pure subroutine diat_trafo(block_overlap, vec_diat_trafo, ksig, kpi, kdel, maxl)
+   !    !> Transformation vector for the diatomic frame
+   !    real(wp),intent(inout)    :: block_overlap(9,9)
+   !    real(wp),intent(in)       :: vec_diat_trafo(3)
+   !    real(wp),intent(in)       :: ksig, kpi, kdel
+   !    integer,intent(in)        :: maxl
+   !    real(wp) :: trafomat(9,9)
+   !    real(wp), allocatable :: eff_tra_mat(:,:), eff_block_overlap(:,:), tmp(:,:), &
+   !    & transformed_s(:,:)
+
+
+   !    !> 1. Calculate the transformation matrix
+
+   !    call harmtr(maxl, vec_diat_trafo, trafomat)
+   !    select case (maxl)
+   !    case (0)
+   !       allocate(eff_tra_mat(1,1),transformed_s(1,1), & 
+   !       & eff_block_overlap(1,1), tmp(1,1), source=0.0_wp)
+   !       eff_tra_mat(1,1) = trafomat(1,1)
+   !       eff_block_overlap(1,1) = block_overlap(1,1)
+   !    case (1)
+   !       allocate(eff_tra_mat(4,4), transformed_s(4,4), &
+   !       & eff_block_overlap(4,4), tmp(4,4), source=0.0_wp)
+   !       eff_tra_mat(1:4,1:4) = trafomat(1:4,1:4)
+   !       eff_block_overlap(1:4,1:4) = block_overlap(1:4,1:4)
+   !    case (2)
+   !       allocate(eff_tra_mat(9,9), transformed_s(9,9), &
+   !       & eff_block_overlap(9,9), tmp(9,9), source=0.0_wp)
+   !       eff_tra_mat(1:9,1:9) = trafomat(1:9,1:9)
+   !       eff_block_overlap(1:9,1:9) = block_overlap(1:9,1:9)
+   !    end select
+
+   !    !> 2. Transform the submatrix
+   !    ! trans_block_s = matmul(matmul(transpose(trafomat), block_overlap),trafomat)
+   !    ! trans_block_s = O^T * S * O
+   !    if (maxl > 0) then
+   !       call gemm(amat=eff_tra_mat,bmat=eff_block_overlap,cmat=tmp,transa='T',transb='N')
+   !       call gemm(amat=tmp,bmat=eff_tra_mat,cmat=transformed_s,transa='N',transb='N')
+   !    else
+   !       transformed_s(1,1) = eff_block_overlap(1,1)
+   !    endif
+
+   !    !> 3.1. Scale elements in diatomic frame
+   !    !> 3.2. Scale elements with equivalent bonding situation in the
+   !    !>      diatomic frame.
+   !    transformed_s(1,1) = transformed_s(1,1)*ksig ! Sigma bond s   <-> s
+   !    if (maxl > 0) then
+   !       transformed_s(1,3) = transformed_s(1,3)*ksig ! Sigma bond s   <-> pz
+   !       transformed_s(3,1) = transformed_s(3,1)*ksig ! Sigma bond pz  <-> s
+   !       transformed_s(3,3) = transformed_s(3,3)*ksig ! Sigma bond pz  <-> pz
+   !       transformed_s(4,4) = transformed_s(4,4)*kpi  ! Pi    bond px  <-> px
+   !       transformed_s(2,2) = transformed_s(2,2)*kpi  ! Pi    bond py  <-> py
+   !       if (maxl > 1) then
+   !          transformed_s(5,1) = transformed_s(5,1)*ksig ! Sigma bond dz2 <-> s
+   !          transformed_s(1,5) = transformed_s(1,5)*ksig ! Sigma bond s   <-> dz2
+   !          transformed_s(3,5) = transformed_s(3,5)*ksig ! Sigma bond pz  <-> dz2
+   !          transformed_s(5,3) = transformed_s(5,3)*ksig ! Sigma bond dz2 <-> pz
+   !          transformed_s(5,5) = transformed_s(5,5)*ksig ! Sigma bond dz2 <-> dz2
+   !          transformed_s(4,6) = transformed_s(4,6)*kpi  ! Pi    bond px  <-> dxz
+   !          transformed_s(6,4) = transformed_s(6,4)*kpi  ! Pi    bond dxz <-> px
+   !          transformed_s(6,6) = transformed_s(6,6)*kpi  ! Pi    bond dxz <-> dxz
+   !          transformed_s(2,7) = transformed_s(2,7)*kpi  ! Pi    bond py  <-> dyz
+   !          transformed_s(7,2) = transformed_s(7,2)*kpi  ! Pi    bond dyz <-> py
+   !          transformed_s(7,7) = transformed_s(7,7)*kpi  ! Pi    bond dyz <-> dyz
+   !          transformed_s(8,8) = transformed_s(8,8)*kdel ! Delta bond dx2-y2 <-> dx2-y2
+   !          transformed_s(9,9) = transformed_s(9,9)*kdel ! Delta bond dxy <-> dxy
+   !       endif
+   !    endif
+
+   !    !> 4. Transform back to original frame
+   !    ! block_overlap = matmul(matmul(trafomat, trans_block_s),transpose(trafomat))
+   !    ! block_overlap = O * S * O^T
+   !    if (maxl > 0) then
+   !       call gemm(amat=eff_tra_mat,bmat=transformed_s,cmat=tmp,transa='N',transb='N')
+   !       call gemm(amat=tmp,bmat=eff_tra_mat,cmat=eff_block_overlap,transa='N',transb='T')
+   !    else
+   !       eff_block_overlap(1,1) = transformed_s(1,1)
+   !    endif
+   !    block_overlap = 0.0_wp
+   !    select case (maxl)
+   !    case (0)
+   !       block_overlap(1,1) = eff_block_overlap(1,1)
+   !    case (1)
+   !       block_overlap(1:4,1:4) = eff_block_overlap(1:4,1:4)
+   !    case (2)
+   !       block_overlap(1:9,1:9) = eff_block_overlap(1:9,1:9)
+   !    end select
+   ! end subroutine diat_trafo
+
+   pure subroutine diat_trafo(block_overlap, vec_diat_trafo, ksig, kpi, kdel, angi, angj)
       !> Transformation vector for the diatomic frame
       real(wp),intent(inout)    :: block_overlap(9,9)
       real(wp),intent(in)       :: vec_diat_trafo(3)
       real(wp),intent(in)       :: ksig, kpi, kdel
-      integer,intent(in)        :: maxl
+      integer,intent(in)        :: angi, angj
       real(wp) :: trafomat(9,9)
       real(wp), allocatable :: eff_tra_mat(:,:), eff_block_overlap(:,:), tmp(:,:), &
-      & transformed_s(:,:)
+      & transformed_s(:,:), trafod(:,:), trafop(:,:)
 
+      if (max(angi, angj) > 2) then
+         error stop "ERROR: f function or higher ang. mom. not implemented in harmtr"
+      endif
 
       !> 1. Calculate the transformation matrix
-
-      call harmtr(maxl, vec_diat_trafo, trafomat)
-      select case (maxl)
+      select case (angi)
       case (0)
-         allocate(eff_tra_mat(1,1),transformed_s(1,1), & 
-         & eff_block_overlap(1,1), tmp(1,1), source=0.0_wp)
-         eff_tra_mat(1,1) = trafomat(1,1)
-         eff_block_overlap(1,1) = block_overlap(1,1)
+         select case (angj)
+         case (0)
+            allocate(eff_tra_mat(1,1),transformed_s(1,1), & 
+            & eff_block_overlap(1,1), tmp(1,1), source=0.0_wp)
+            eff_tra_mat(1,1) = trafomat(1,1)
+            eff_block_overlap = block_overlap
+         case (1)
+            allocate(eff_tra_mat(4,4), transformed_s(4,4), &
+            & eff_block_overlap(4,4), tmp(4,4), source=0.0_wp)
+            allocate(trafop(3,3), source=0.0_wp)
+            call harmtr_p(vec_diat_trafo, trafop)
+            eff_tra_mat = 0.0_wp
+            eff_tra_mat(1,1) = 1.0_wp
+            eff_tra_mat(2:4,2:4) = trafop(1:3,1:3)
+            eff_block_overlap(1:4,1:4) = block_overlap(1:4,1:4)
+         case (2)
+            allocate(eff_tra_mat(6,6), transformed_s(6,6), &
+            & eff_block_overlap(6,6), tmp(6,6), source=0.0_wp)
+            allocate(trafod(5,5), source=0.0_wp)
+            call harmtr_d(vec_diat_trafo, trafod)
+            eff_tra_mat = 0.0_wp
+            eff_tra_mat(1,1) = 1.0_wp
+            eff_tra_mat(2:6,2:6) = trafod(1:5,1:5)
+            eff_block_overlap(1:6,1:6) = block_overlap(1:6,1:6)
+         end select
       case (1)
-         allocate(eff_tra_mat(4,4), transformed_s(4,4), &
-         & eff_block_overlap(4,4), tmp(4,4), source=0.0_wp)
-         eff_tra_mat(1:4,1:4) = trafomat(1:4,1:4)
-         eff_block_overlap(1:4,1:4) = block_overlap(1:4,1:4)
+         select case (angj)
+         case (0)
+            allocate(eff_tra_mat(4,4), transformed_s(4,4), &
+            & eff_block_overlap(4,4), tmp(4,4), source=0.0_wp)
+            allocate(trafop(3,3), source=0.0_wp)
+            call harmtr_p(vec_diat_trafo, trafop)
+            eff_tra_mat = 0.0_wp
+            eff_tra_mat(1,1) = 1.0_wp
+            eff_tra_mat(2:4,2:4) = trafop(1:3,1:3)
+            eff_block_overlap(1:4,1:4) = block_overlap(1:4,1:4)
+         case (1)
+            allocate(eff_tra_mat(3,3), transformed_s(3,3), &
+            & eff_block_overlap(3,3), tmp(3,3), source=0.0_wp)
+            allocate(trafop(3,3), source=0.0_wp)
+            call harmtr_p(vec_diat_trafo, trafop)
+            eff_tra_mat = trafop
+            eff_block_overlap(1:3,1:3) = block_overlap(1:3,1:3)
+         case (2)
+            allocate(eff_tra_mat(8,8), transformed_s(8,8), &
+            & eff_block_overlap(8,8), tmp(8,8), source=0.0_wp)
+            allocate(trafod(5,5), trafop(3,3), source=0.0_wp)
+            call harmtr_p(vec_diat_trafo, trafop)
+            call harmtr_d(vec_diat_trafo, trafod)
+            eff_tra_mat = 0.0_wp
+            eff_tra_mat(1:3,1:3) = trafop
+            eff_tra_mat(4:8,4:8) = trafod
+            eff_block_overlap(1:8,1:8) = block_overlap(1:8,1:8)
+         end select
       case (2)
-         allocate(eff_tra_mat(9,9), transformed_s(9,9), &
-         & eff_block_overlap(9,9), tmp(9,9), source=0.0_wp)
-         eff_tra_mat(1:9,1:9) = trafomat(1:9,1:9)
-         eff_block_overlap(1:9,1:9) = block_overlap(1:9,1:9)
+         select case (angj)
+         case (0)
+            allocate(eff_tra_mat(6,6), transformed_s(6,6), &
+            & eff_block_overlap(6,6), tmp(6,6), source=0.0_wp)
+            allocate(trafod(5,5), source=0.0_wp)
+            call harmtr_d(vec_diat_trafo, trafod)
+            eff_tra_mat = 0.0_wp
+            eff_tra_mat(1,1) = 1.0_wp
+            eff_tra_mat(2:6,2:6) = trafod(1:5,1:5)
+            eff_block_overlap(1:6,1:6) = block_overlap(1:6,1:6)
+         case (1)
+            allocate(eff_tra_mat(8,8), transformed_s(8,8), &
+            & eff_block_overlap(8,8), tmp(8,8), source=0.0_wp)
+            allocate(trafod(5,5), trafop(3,3), source=0.0_wp)
+            call harmtr_p(vec_diat_trafo, trafop)
+            call harmtr_d(vec_diat_trafo, trafod)
+            eff_tra_mat = 0.0_wp
+            eff_tra_mat(1:3,1:3) = trafop
+            eff_tra_mat(4:8,4:8) = trafod
+            eff_block_overlap(1:8,1:8) = block_overlap(1:8,1:8)
+         case (2)
+            allocate(eff_tra_mat(5,5), transformed_s(5,5), &
+            & eff_block_overlap(5,5), tmp(5,5), source=0.0_wp)
+            allocate(trafod(5,5), source=0.0_wp)
+            call harmtr_d(vec_diat_trafo, trafod)
+            eff_tra_mat = trafod
+            eff_block_overlap(1:5,1:5) = block_overlap(1:5,1:5)
+         end select
       end select
 
       !> 2. Transform the submatrix
       ! trans_block_s = matmul(matmul(transpose(trafomat), block_overlap),trafomat)
       ! trans_block_s = O^T * S * O
-      if (maxl > 0) then
+      if (max(angi,angj) > 0) then
          call gemm(amat=eff_tra_mat,bmat=eff_block_overlap,cmat=tmp,transa='T',transb='N')
          call gemm(amat=tmp,bmat=eff_tra_mat,cmat=transformed_s,transa='N',transb='N')
       else
          transformed_s(1,1) = eff_block_overlap(1,1)
       endif
 
+
       !> 3.1. Scale elements in diatomic frame
       !> 3.2. Scale elements with equivalent bonding situation in the
       !>      diatomic frame.
-      transformed_s(1,1) = transformed_s(1,1)*ksig ! Sigma bond s   <-> s
-      if (maxl > 0) then
-         transformed_s(1,3) = transformed_s(1,3)*ksig ! Sigma bond s   <-> pz
-         transformed_s(3,1) = transformed_s(3,1)*ksig ! Sigma bond pz  <-> s
-         transformed_s(3,3) = transformed_s(3,3)*ksig ! Sigma bond pz  <-> pz
-         transformed_s(4,4) = transformed_s(4,4)*kpi  ! Pi    bond px  <-> px
-         transformed_s(2,2) = transformed_s(2,2)*kpi  ! Pi    bond py  <-> py
-         if (maxl > 1) then
-            transformed_s(5,1) = transformed_s(5,1)*ksig ! Sigma bond dz2 <-> s
-            transformed_s(1,5) = transformed_s(1,5)*ksig ! Sigma bond s   <-> dz2
-            transformed_s(3,5) = transformed_s(3,5)*ksig ! Sigma bond pz  <-> dz2
-            transformed_s(5,3) = transformed_s(5,3)*ksig ! Sigma bond dz2 <-> pz
-            transformed_s(5,5) = transformed_s(5,5)*ksig ! Sigma bond dz2 <-> dz2
-            transformed_s(4,6) = transformed_s(4,6)*kpi  ! Pi    bond px  <-> dxz
-            transformed_s(6,4) = transformed_s(6,4)*kpi  ! Pi    bond dxz <-> px
-            transformed_s(6,6) = transformed_s(6,6)*kpi  ! Pi    bond dxz <-> dxz
-            transformed_s(2,7) = transformed_s(2,7)*kpi  ! Pi    bond py  <-> dyz
-            transformed_s(7,2) = transformed_s(7,2)*kpi  ! Pi    bond dyz <-> py
-            transformed_s(7,7) = transformed_s(7,7)*kpi  ! Pi    bond dyz <-> dyz
-            transformed_s(8,8) = transformed_s(8,8)*kdel ! Delta bond dx2-y2 <-> dx2-y2
-            transformed_s(9,9) = transformed_s(9,9)*kdel ! Delta bond dxy <-> dxy
-         endif
-      endif
+      select case (angi)
+      case (0)
+         select case (angj)
+         case (0)
+            transformed_s(1,1) = transformed_s(1,1)*ksig ! Sigma bond s   <-> s
+         case (1)
+            transformed_s(1,1) = transformed_s(1,1)*ksig ! Sigma bond s   <-> s
+            transformed_s(1,3) = transformed_s(1,3)*ksig ! Sigma bond s   <-> pz
+            transformed_s(3,1) = transformed_s(3,1)*ksig ! Sigma bond pz  <-> s
+            transformed_s(3,3) = transformed_s(3,3)*ksig ! Sigma bond pz  <-> pz
+            transformed_s(4,4) = transformed_s(4,4)*kpi  ! Pi    bond px  <-> px
+            transformed_s(2,2) = transformed_s(2,2)*kpi  ! Pi    bond py  <-> py
+         case (2)
+            transformed_s(1,1) = transformed_s(1,1)*ksig ! Sigma bond s   <-> s
+            transformed_s(2,1) = transformed_s(2,1)*ksig ! Sigma bond dz2 <-> s
+            transformed_s(1,2) = transformed_s(1,2)*ksig ! Sigma bond s   <-> dz2
+            transformed_s(2,2) = transformed_s(2,2)*ksig ! Sigma bond dz2 <-> dz2
+            transformed_s(3,3) = transformed_s(3,3)*kpi  ! Pi    bond dxz <-> dxz
+            transformed_s(4,4) = transformed_s(4,4)*kpi  ! Pi    bond dyz <-> dyz
+            transformed_s(5,5) = transformed_s(5,5)*kdel ! Delta bond dx2-y2 <-> dx2-y2
+            transformed_s(6,6) = transformed_s(6,6)*kdel ! Delta bond dxy <-> dxy
+         end select
+      case (1)
+         select case (angj)
+         case (0)
+            transformed_s(1,1) = transformed_s(1,1)*ksig ! Sigma bond s   <-> s
+            transformed_s(1,3) = transformed_s(1,3)*ksig ! Sigma bond s   <-> pz
+            transformed_s(3,1) = transformed_s(3,1)*ksig ! Sigma bond pz  <-> s
+            transformed_s(3,3) = transformed_s(3,3)*ksig ! Sigma bond pz  <-> pz
+            transformed_s(4,4) = transformed_s(4,4)*kpi  ! Pi    bond px  <-> px
+            transformed_s(2,2) = transformed_s(2,2)*kpi  ! Pi    bond py  <-> py
+         case (1)
+            transformed_s(2,2) = transformed_s(2,2)*ksig ! Sigma bond pz  <-> pz
+            transformed_s(3,3) = transformed_s(3,3)*kpi  ! Pi    bond px  <-> px
+            transformed_s(1,1) = transformed_s(1,1)*kpi  ! Pi    bond py  <-> py
+         case (2)
+            transformed_s(2,2) = transformed_s(2,2)*ksig ! Sigma bond pz  <-> pz
+            transformed_s(3,3) = transformed_s(3,3)*kpi  ! Pi    bond px  <-> px
+            transformed_s(1,1) = transformed_s(1,1)*kpi  ! Pi    bond py  <-> py
+
+            transformed_s(2,4) = transformed_s(2,4)*ksig ! Sigma bond pz  <-> dz2
+            transformed_s(4,2) = transformed_s(4,2)*ksig ! Sigma bond dz2 <-> pz
+            transformed_s(3,5) = transformed_s(3,5)*kpi  ! Pi    bond px  <-> dxz
+            transformed_s(5,3) = transformed_s(5,3)*kpi  ! Pi    bond dxz <-> px
+            transformed_s(1,6) = transformed_s(1,6)*kpi  ! Pi    bond py  <-> dyz
+            transformed_s(6,1) = transformed_s(6,1)*kpi  ! Pi    bond dyz <-> py
+
+            transformed_s(4,4) = transformed_s(4,4)*ksig ! Sigma bond dz2 <-> dz2
+            transformed_s(5,5) = transformed_s(5,5)*kpi  ! Pi    bond dxz <-> dxz
+            transformed_s(6,6) = transformed_s(6,6)*kpi  ! Pi    bond dyz <-> dyz
+            transformed_s(7,7) = transformed_s(7,7)*kdel ! Delta bond dx2-y2 <-> dx2-y2
+            transformed_s(8,8) = transformed_s(8,8)*kdel ! Delta bond dxy <-> dxy
+         end select
+      case (2)
+         select case (angj)
+         case (0)
+            transformed_s(1,1) = transformed_s(1,1)*ksig ! Sigma bond s   <-> s
+            transformed_s(2,1) = transformed_s(2,1)*ksig ! Sigma bond dz2 <-> s
+            transformed_s(1,2) = transformed_s(1,2)*ksig ! Sigma bond s   <-> dz2
+            transformed_s(2,2) = transformed_s(2,2)*ksig ! Sigma bond dz2 <-> dz2
+            transformed_s(3,3) = transformed_s(3,3)*kpi  ! Pi    bond dxz <-> dxz
+            transformed_s(4,4) = transformed_s(4,4)*kpi  ! Pi    bond dyz <-> dyz
+            transformed_s(5,5) = transformed_s(5,5)*kdel ! Delta bond dx2-y2 <-> dx2-y2
+            transformed_s(6,6) = transformed_s(6,6)*kdel ! Delta bond dxy <-> dxy
+         case (1)
+            transformed_s(2,2) = transformed_s(2,2)*ksig ! Sigma bond pz  <-> pz
+            transformed_s(3,3) = transformed_s(3,3)*kpi  ! Pi    bond px  <-> px
+            transformed_s(1,1) = transformed_s(1,1)*kpi  ! Pi    bond py  <-> py
+
+            transformed_s(2,4) = transformed_s(2,4)*ksig ! Sigma bond pz  <-> dz2
+            transformed_s(4,2) = transformed_s(4,2)*ksig ! Sigma bond dz2 <-> pz
+            transformed_s(3,5) = transformed_s(3,5)*kpi  ! Pi    bond px  <-> dxz
+            transformed_s(5,3) = transformed_s(5,3)*kpi  ! Pi    bond dxz <-> px
+            transformed_s(1,6) = transformed_s(1,6)*kpi  ! Pi    bond py  <-> dyz
+            transformed_s(6,1) = transformed_s(6,1)*kpi  ! Pi    bond dyz <-> py
+
+            transformed_s(4,4) = transformed_s(4,4)*ksig ! Sigma bond dz2 <-> dz2
+            transformed_s(5,5) = transformed_s(5,5)*kpi  ! Pi    bond dxz <-> dxz
+            transformed_s(6,6) = transformed_s(6,6)*kpi  ! Pi    bond dyz <-> dyz
+            transformed_s(7,7) = transformed_s(7,7)*kdel ! Delta bond dx2-y2 <-> dx2-y2
+            transformed_s(8,8) = transformed_s(8,8)*kdel ! Delta bond dxy <-> dxy
+         case (2)
+            transformed_s(1,1) = transformed_s(1,1)*ksig ! Sigma bond dz2 <-> dz2
+            transformed_s(2,2) = transformed_s(2,2)*kpi  ! Pi    bond dxz <-> dxz
+            transformed_s(3,3) = transformed_s(3,3)*kpi  ! Pi    bond dyz <-> dyz
+            transformed_s(4,4) = transformed_s(4,4)*kdel ! Delta bond dx2-y2 <-> dx2-y2
+            transformed_s(5,5) = transformed_s(5,5)*kdel ! Delta bond dxy <-> dxy
+         end select
+      end select
 
       !> 4. Transform back to original frame
       ! block_overlap = matmul(matmul(trafomat, trans_block_s),transpose(trafomat))
       ! block_overlap = O * S * O^T
-      if (maxl > 0) then
+      if (max(angi, angj) > 0) then
          call gemm(amat=eff_tra_mat,bmat=transformed_s,cmat=tmp,transa='N',transb='N')
          call gemm(amat=tmp,bmat=eff_tra_mat,cmat=eff_block_overlap,transa='N',transb='T')
       else
          eff_block_overlap(1,1) = transformed_s(1,1)
       endif
       block_overlap = 0.0_wp
-      select case (maxl)
-      case (0)
-         block_overlap(1,1) = eff_block_overlap(1,1)
-      case (1)
-         block_overlap(1:4,1:4) = eff_block_overlap(1:4,1:4)
-      case (2)
-         block_overlap(1:9,1:9) = eff_block_overlap(1:9,1:9)
-      end select
    end subroutine diat_trafo
 
    subroutine relvec(vec, rkl, veckl)
@@ -169,28 +387,17 @@ contains
 
    end function eff_equality
 
-   pure subroutine harmtr(maxl,veckl,trafomat)
-      !> Maximum angular momentum
-      integer, intent(in)  :: maxl
+   pure subroutine harmtr_p(veckl,trafomat)
       !> Normalized vector from atom k to atom l
       real(wp), intent(in) :: veckl(3)
       !> Transformation matrix
       real(wp), intent(out) :: trafomat(9,9)
 
-      real(wp) :: cos2p, cos2t, cosp, cost, sin2p, sin2t, sinp, sint, sqrt3
+      real(wp) :: cosp, cost, sinp, sint
 
       !     ------------------------------------------------------------------
-      if (maxl > 2) then
-         error stop "ERROR: f function or higher ang. mom. not implemented in harmtr"
-      endif
 
       trafomat = 0.0_wp
-      !     -----------------------------
-      !     *** s functions (trafomat(1x1)) ***
-      !     -----------------------------
-      trafomat(1,1) = 1.0
-
-      if ( maxl == 0 ) return
       !     -----------------------------
       !     *** p functions (trafomat(4x4)) ***
       !     -----------------------------
@@ -221,18 +428,44 @@ contains
       ! 3, 4, 2 holds, corresponding (in MSINDO convention)
       ! to the tblite ordering of p functions, i.e.
       ! y, z, x
-      trafomat(4,3) = SINT*COSP
-      trafomat(2,3) = SINT*SINP
-      trafomat(3,3) = COST
-      trafomat(4,4) = COST*COSP
-      trafomat(2,4) = COST*SINP
-      trafomat(3,4) = -SINT
-      trafomat(4,2) = -SINP
-      trafomat(2,2) = COSP
-      trafomat(3,2) = 0.0_wp
+      trafomat(3,2) = SINT*COSP
+      trafomat(1,2) = SINT*SINP
+      trafomat(2,2) = COST
+      trafomat(3,3) = COST*COSP
+      trafomat(1,3) = COST*SINP
+      trafomat(2,3) = -SINT
+      trafomat(3,1) = -SINP
+      trafomat(1,1) = COSP
+      trafomat(2,1) = 0.0_wp
 
-      if ( maxl <= 1 ) return
+   end subroutine harmtr_p
+   
+   pure subroutine harmtr_d(veckl,trafomat)
+      !> Normalized vector from atom k to atom l
+      real(wp), intent(in) :: veckl(3)
+      !> Transformation matrix
+      real(wp), intent(out) :: trafomat(5,5)
 
+      real(wp) :: cos2p, cos2t, cosp, cost, sin2p, sin2t, sinp, sint, sqrt3
+
+      !     ------------------------------------------------------------------
+
+      trafomat = 0.0_wp
+
+      cost = veckl(3)
+      if ( abs(cost) .eq. 1.0_wp ) then
+         sint = 0.0_wp
+         cosp = 1.0_wp
+         sinp = 0.0_wp
+      else if ( abs(cost) .eq. 0.0_wp ) then
+         sint = 1.0_wp
+         cosp = veckl(1)
+         sinp = veckl(2)
+      else
+         sint = SQRT(1.0_wp-COST**2)
+         cosp = veckl(1)/SINT
+         sinp = veckl(2)/SINT
+      endif
 !     -----------------------------
 !     *** d functions (trafomat(9x9)) ***
 !     -----------------------------
@@ -246,31 +479,32 @@ contains
       !> Original MSINDO ordering
       !> The MSINDO d SAO ordering corresponds to the
       !> tblite ordering of d SAOs
-      trafomat(5,5) = (3.0_wp * COST**2 - 1.0_wp) * 0.5_wp
-      trafomat(6,5) = SQRT3*SIN2T*COSP*0.5_wp
-      trafomat(7,5) = SQRT3*SIN2T*SINP*0.5_wp
-      trafomat(8,5) = SQRT3*SINT**2*COS2P*0.5_wp
-      trafomat(9,5) = SQRT3*SINT**2*SIN2P*0.5_wp
-      trafomat(5,6) = -SQRT3*SIN2T*0.5_wp
-      trafomat(6,6) = COS2T*COSP
-      trafomat(7,6) = COS2T*SINP
-      trafomat(8,6) = SIN2T*COS2P*0.5_wp
-      trafomat(9,6) = SIN2T*SIN2P*0.5_wp
-      trafomat(5,7) = 0.0_wp
-      trafomat(6,7) = -COST*SINP
-      trafomat(7,7) = COST*COSP
-      trafomat(8,7) = -SINT*SIN2P
-      trafomat(9,7) = SINT*COS2P
-      trafomat(5,8) = SQRT3*SINT**2 * 0.5_wp
-      trafomat(6,8) = -SIN2T*COSP*0.5_wp
-      trafomat(7,8) = -SIN2T*SINP*0.5_wp
-      trafomat(8,8) = (1.0_wp + COST**2) * COS2P * 0.5_wp
-      trafomat(9,8) = (1.0_wp + COST**2) * SIN2P * 0.5_wp
-      trafomat(5,9) = 0.0_wp
-      trafomat(6,9) = SINT*SINP
-      trafomat(7,9) = -SINT*COSP
-      trafomat(8,9) = -COST*SIN2P
-      trafomat(9,9) = COST*COS2P
 
-   end subroutine harmtr
+      trafomat(1,1) = (3.0_wp * COST**2 - 1.0_wp) * 0.5_wp
+      trafomat(2,1) = SQRT3*SIN2T*COSP*0.5_wp
+      trafomat(3,1) = SQRT3*SIN2T*SINP*0.5_wp
+      trafomat(4,1) = SQRT3*SINT**2*COS2P*0.5_wp
+      trafomat(5,1) = SQRT3*SINT**2*SIN2P*0.5_wp
+      trafomat(1,2) = -SQRT3*SIN2T*0.5_wp
+      trafomat(2,2) = COS2T*COSP
+      trafomat(3,2) = COS2T*SINP
+      trafomat(4,2) = SIN2T*COS2P*0.5_wp
+      trafomat(5,2) = SIN2T*SIN2P*0.5_wp
+      trafomat(1,3) = 0.0_wp
+      trafomat(2,3) = -COST*SINP
+      trafomat(3,3) = COST*COSP
+      trafomat(4,3) = -SINT*SIN2P
+      trafomat(5,3) = SINT*COS2P
+      trafomat(1,4) = SQRT3*SINT**2 * 0.5_wp
+      trafomat(2,4) = -SIN2T*COSP*0.5_wp
+      trafomat(3,4) = -SIN2T*SINP*0.5_wp
+      trafomat(4,4) = (1.0_wp + COST**2) * COS2P * 0.5_wp
+      trafomat(5,4) = (1.0_wp + COST**2) * SIN2P * 0.5_wp
+      trafomat(1,5) = 0.0_wp
+      trafomat(2,5) = SINT*SINP
+      trafomat(3,5) = -SINT*COSP
+      trafomat(4,5) = -COST*SIN2P
+      trafomat(5,5) = COST*COS2P
+
+   end subroutine harmtr_d
 end module tblite_integral_diat_trafo
